@@ -23,27 +23,34 @@ jobs:
         shell: pwsh
         run: git -C upstream/voice-bridge rev-parse HEAD
 
-      - name: Build server and client, run server tests
+      - name: Apply DeathAmir branding to engine sources
+        shell: pwsh
+        run: .\branding\Apply-iRxVoiceBranding.ps1
+
+      - name: Build branded engine and run server tests
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
           & .\upstream\voice-bridge\build.ps1 -Target all -Package
           if ($LASTEXITCODE -ne 0) { throw "iRxVoice engine build failed: $LASTEXITCODE" }
 
-      - name: Brand client binary and prepare distribution
+      - name: Brand client ASI and prepare distribution
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
           $client = Get-ChildItem -Path .\upstream\voice-bridge\dist\client -Filter 'voice-bridge.asi' -Recurse -File | Select-Object -First 1
           if (-not $client) { throw 'Build did not produce voice-bridge.asi' }
           Rename-Item -LiteralPath $client.FullName -NewName 'iRxVoice.asi'
-          $server = Get-ChildItem -Path .\\upstream\\voice-bridge\\dist\\server -Filter 'voice-bridge.dll' -Recurse -File | Select-Object -First 1
+          $server = Get-ChildItem -Path .\upstream\voice-bridge\dist\server -Filter 'voice-bridge.dll' -Recurse -File | Select-Object -First 1
           if (-not $server) { throw 'Build did not produce voice-bridge.dll' }
-          Rename-Item -LiteralPath $server.FullName -NewName 'iRxVoice.dll'
           New-Item -ItemType Directory -Force -Path .\dist\iRxVoice\client | Out-Null
           New-Item -ItemType Directory -Force -Path .\dist\iRxVoice\server | Out-Null
           Copy-Item .\upstream\voice-bridge\dist\client\* .\dist\iRxVoice\client\ -Recurse -Force
           Copy-Item .\upstream\voice-bridge\dist\server\* .\dist\iRxVoice\server\ -Recurse -Force
+          if (-not (Test-Path .\dist\iRxVoice\server\voice-bridge.dll -PathType Leaf)) {
+            $serverCopy = Get-ChildItem -Path .\dist\iRxVoice\server -Filter 'voice-bridge.dll' -Recurse -File | Select-Object -First 1
+            if (-not $serverCopy) { throw 'Server DLL was not copied with its original filename' }
+          }
           Copy-Item .\LICENSE .\dist\iRxVoice\LICENSE -Force
           @"
           DeathAmir iRxVoice
@@ -52,6 +59,7 @@ jobs:
           Official IPv4: 5.57.37.122:7777
           Website: https://irautox.ir
           Client: iRxVoice.asi
+          Server component filename: voice-bridge.dll (unchanged)
           "@ | Set-Content .\dist\iRxVoice\README.txt -Encoding UTF8
 
       - name: Upload branded distribution
