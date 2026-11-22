@@ -1,0 +1,3 @@
+[submodule "upstream/voice-bridge"]
+	path = upstream/voice-bridge
+	url = https://github.com/devbluen/omp-Voice-Bridge.git
