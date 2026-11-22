@@ -1,4 +1,4 @@
-name: iRxVoice Build
+name: iRxVoice Build and Release
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   windows:
@@ -34,38 +34,44 @@ jobs:
           & .\upstream\voice-bridge\build.ps1 -Target all -Package
           if ($LASTEXITCODE -ne 0) { throw "iRxVoice engine build failed: $LASTEXITCODE" }
 
-      - name: Brand client ASI and prepare distribution
+      - name: Brand client ASI and prepare client release
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
           $client = Get-ChildItem -Path .\upstream\voice-bridge\dist\client -Filter 'voice-bridge.asi' -Recurse -File | Select-Object -First 1
           if (-not $client) { throw 'Build did not produce voice-bridge.asi' }
           Rename-Item -LiteralPath $client.FullName -NewName 'iRxVoice.asi'
+          New-Item -ItemType Directory -Force -Path .\dist\iRxVoice | Out-Null
+          Copy-Item -LiteralPath (Join-Path $client.DirectoryName 'iRxVoice.asi') -Destination .\dist\iRxVoice\iRxVoice.asi -Force
+          if (-not (Test-Path .\dist\iRxVoice\iRxVoice.asi -PathType Leaf)) { throw 'iRxVoice.asi release file is missing' }
           $server = Get-ChildItem -Path .\upstream\voice-bridge\dist\server -Filter 'voice-bridge.dll' -Recurse -File | Select-Object -First 1
           if (-not $server) { throw 'Build did not produce voice-bridge.dll' }
-          New-Item -ItemType Directory -Force -Path .\dist\iRxVoice\client | Out-Null
-          New-Item -ItemType Directory -Force -Path .\dist\iRxVoice\server | Out-Null
-          Copy-Item .\upstream\voice-bridge\dist\client\* .\dist\iRxVoice\client\ -Recurse -Force
-          Copy-Item .\upstream\voice-bridge\dist\server\* .\dist\iRxVoice\server\ -Recurse -Force
-          if (-not (Test-Path .\dist\iRxVoice\server\voice-bridge.dll -PathType Leaf)) {
-            $serverCopy = Get-ChildItem -Path .\dist\iRxVoice\server -Filter 'voice-bridge.dll' -Recurse -File | Select-Object -First 1
-            if (-not $serverCopy) { throw 'Server DLL was not copied with its original filename' }
-          }
-          Copy-Item .\LICENSE .\dist\iRxVoice\LICENSE -Force
-          @"
-          DeathAmir iRxVoice
-          Repository: https://github.com/DeathAmir/IRXVOICE
-          Official server: play.irautox.ir:7777
-          Official IPv4: 5.57.37.122:7777
-          Website: https://irautox.ir
-          Client: iRxVoice.asi
-          Server component filename: voice-bridge.dll (unchanged)
-          "@ | Set-Content .\dist\iRxVoice\README.txt -Encoding UTF8
+          Write-Host 'Verified server binary: voice-bridge.dll (unchanged)'
 
-      - name: Upload branded distribution
+      - name: Upload client-only build artifact
         uses: actions/upload-artifact@v4
         with:
-          name: iRxVoice-Windows
-          path: dist/iRxVoice/**
+          name: iRxVoice-Client
+          path: dist/iRxVoice/iRxVoice.asi
           if-no-files-found: error
           retention-days: 30
+
+      - name: Publish GitHub release (client ASI only)
+        if: github.event_name == 'push' && github.ref == 'refs/heads/feature/irxvoice-bridge'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: iRxVoice-v1.0.0
+          name: DeathAmir iRxVoice v1.0.0
+          target_commitish: ${{ github.sha }}
+          body: |
+            DeathAmir iRxVoice client release.
+
+            Install `iRxVoice.asi` in the GTA San Andreas folder alongside the supported SA-MP/open.mp client.
+
+            Official server: play.irautox.ir:7777
+            Website: https://irautox.ir
+
+            The server component remains named `voice-bridge.dll` and is not included in this client-only release.
+          files: dist/iRxVoice/iRxVoice.asi
+          fail_on_unmatched_files: true
+          overwrite_files: true
