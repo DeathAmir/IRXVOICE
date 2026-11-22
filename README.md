@@ -39,14 +39,14 @@ GitHub Actions builds the server and 32-bit GTA client, runs the upstream server
 
 ## Install on open.mp
 
-1. Copy `voice-bridge.dll` from the server package into the server's `components/` directory.
+1. Copy `iRxVoice.dll` from the server package into the server's `components/` directory.
 2. Copy the supplied Pawn include files into `qawno/include/`.
 3. Do not also load the same DLL from `plugins/`; open.mp should load it as a component.
 4. Open the voice UDP port reported in the server log (default: game port + 1; for game port 7777 this is normally UDP 7778).
 5. Merge the example from `examples/irautox-proximity.pwn` into the gamemode, combining callbacks instead of defining duplicates.
 6. Install **iRxVoice.asi** on client PCs. Do not load it alongside another SampVoice/Voice Bridge ASI at the same time.
 
-For SA-MP legacy servers, put the server DLL in `plugins/`, add `voice-bridge` to the `plugins` line, and place includes in `pawno/include/`.
+For SA-MP legacy servers, put the server DLL in `plugins/`, add `iRxVoice` to the `plugins` line, and place includes in `pawno/include/`.
 
 ## IRAutoX integration
 
