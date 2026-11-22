@@ -37,6 +37,9 @@ jobs:
           $client = Get-ChildItem -Path .\upstream\voice-bridge\dist\client -Filter 'voice-bridge.asi' -Recurse -File | Select-Object -First 1
           if (-not $client) { throw 'Build did not produce voice-bridge.asi' }
           Rename-Item -LiteralPath $client.FullName -NewName 'iRxVoice.asi'
+          $server = Get-ChildItem -Path .\\upstream\\voice-bridge\\dist\\server -Filter 'voice-bridge.dll' -Recurse -File | Select-Object -First 1
+          if (-not $server) { throw 'Build did not produce voice-bridge.dll' }
+          Rename-Item -LiteralPath $server.FullName -NewName 'iRxVoice.dll'
           New-Item -ItemType Directory -Force -Path .\dist\iRxVoice\client | Out-Null
           New-Item -ItemType Directory -Force -Path .\dist\iRxVoice\server | Out-Null
           Copy-Item .\upstream\voice-bridge\dist\client\* .\dist\iRxVoice\client\ -Recurse -Force
