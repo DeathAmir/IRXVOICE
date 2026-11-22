@@ -1,74 +1,61 @@
-# IRXVOICE
+# DeathAmir iRxVoice
 
-IRXVOICE packages a C++ voice server component/plugin and a GTA San Andreas client mod for the IRAutoX open.mp server.
+**iRxVoice** is the IRAutoX-branded voice chat distribution for GTA San Andreas multiplayer and open.mp. It provides proximity voice, radio/frequency channels, phone calls, vehicle audio and SampVoice-compatible Pawn APIs.
 
-## Compatibility choice
+- **Project:** DeathAmir iRxVoice
+- **Repository:** https://github.com/DeathAmir/IRXVOICE
+- **Official game server:** `play.irautox.ir:7777`
+- **Official IPv4 endpoint:** `5.57.37.122:7777`
+- **Official website/domain:** `irautox.ir`
 
-The implementation is based on [Voice Bridge](https://github.com/devbluen/omp-Voice-Bridge), pinned as a Git submodule at a known upstream commit. This is intentional: Voice Bridge already implements the SampVoice wire/API compatibility layer, including the legacy `Sv*` Pawn natives. Reimplementing that protocol independently would risk incompatibility with existing SampVoice clients.
+## Implementation and licensing
 
-- Server: open.mp component and SA-MP plugin.
-- Client: `voice-bridge.asi` for SA-MP 0.3.7 R1/R2/R3/R4/R5 and 0.3.DL.
-- Legacy clients: existing `sampvoice.asi` clients are accepted when enabled by server configuration.
-- Legacy gamemodes: `#include <sampvoice>` can continue using the compatibility include shipped by the server package.
-- Source: C++17, with the upstream source kept in `upstream/voice-bridge`.
+The current C++ voice engine is based on [Voice Bridge](https://github.com/devbluen/omp-Voice-Bridge), pinned to a known upstream revision as a Git submodule. This is deliberate: it preserves the existing SampVoice network protocol and legacy `Sv*` Pawn API compatibility instead of introducing an incompatible voice protocol. The upstream MIT license and copyright notices are retained. The top-level repository license remains unchanged.
 
-The upstream code is MIT licensed. Its copyright and LICENSE file are retained in the submodule. IRXVOICE's top-level LICENSE remains the repository's existing GPL-3.0 license; the submodule keeps its separate license.
+This repository owns the IRAutoX branding, packaging, build workflow, integration examples and distribution. The engine itself is not yet a clean-room rewrite.
 
-## Get the source
-
-Clone with submodules:
+## Clone
 
 ```bash
 git clone --recurse-submodules https://github.com/DeathAmir/IRXVOICE.git
 cd IRXVOICE
 ```
 
-If already cloned:
+For an existing clone:
 
 ```bash
 git submodule update --init --recursive
 ```
 
-## Build locally (Windows)
+## Build (Windows)
 
-Requirements: Visual Studio 2022 with Desktop development with C++, CMake 3.19+, Git, and PowerShell.
+Requirements: Visual Studio 2022 with Desktop development with C++, CMake 3.19+, Git and PowerShell.
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\upstream\voice-bridge\build.ps1 -Target all -Package
 ```
 
-The script builds the server plugin/component and 32-bit GTA client, runs upstream server tests, and collects packages under:
-
-- `upstream/voice-bridge/dist/server/`
-- `upstream/voice-bridge/dist/client/`
-
-GitHub Actions runs this build on pushes, pull requests, and manual dispatch. Download the `IRXVOICE-Windows` workflow artifact after a successful run.
+GitHub Actions builds the server and 32-bit GTA client, runs the upstream server tests and publishes the branded artifact **iRxVoice-Windows**. The client package is renamed to **iRxVoice.asi** during CI packaging.
 
 ## Install on open.mp
 
 1. Copy `voice-bridge.dll` from the server package into the server's `components/` directory.
-2. Copy the supplied `.inc` files into `qawno/include/`.
+2. Copy the supplied Pawn include files into `qawno/include/`.
 3. Do not also load the same DLL from `plugins/`; open.mp should load it as a component.
-4. Open the voice UDP port shown in the server log (default is game port + 1).
-5. Add the Pawn integration from `examples/irautox-proximity.pwn` to the gamemode, merging callbacks rather than defining duplicate callbacks.
-6. Players install either `voice-bridge.asi` or keep their compatible `sampvoice.asi`. Do not load both clients simultaneously.
+4. Open the voice UDP port reported in the server log (default: game port + 1; for game port 7777 this is normally UDP 7778).
+5. Merge the example from `examples/irautox-proximity.pwn` into the gamemode, combining callbacks instead of defining duplicates.
+6. Install **iRxVoice.asi** on client PCs. Do not load it alongside another SampVoice/Voice Bridge ASI at the same time.
 
-For SA-MP legacy servers, place the DLL in `plugins/`, add `voice-bridge` to the `plugins` line, and copy includes to `pawno/include/`.
-
-## Existing SampVoice gamemodes and clients
-
-The server package contains `sampvoice.inc`, a compatibility include. Existing SampVoice Pawn scripts can use the old `Sv*` API without being rewritten. The server can accept both SampVoice and Voice Bridge clients; see the upstream `voice_allow_sampvoice` and `voice_allow_voicebridge` settings.
-
-The newer Voice Bridge client supports the same server and also has an in-game F11 settings menu. If a player keeps `sampvoice.asi`, they do not need `voice-bridge.asi`.
+For SA-MP legacy servers, put the server DLL in `plugins/`, add `voice-bridge` to the `plugins` line, and place includes in `pawno/include/`.
 
 ## IRAutoX integration
 
-See `examples/irautox-proximity.pwn` for the minimal proximity channel. It uses B as push-to-talk and creates one dynamic 3D stream per player. Merge its lifecycle and activation callbacks into `gungame.pwn`; do not duplicate callbacks already present in the gamemode.
+`examples/irautox-proximity.pwn` demonstrates a local 3D proximity stream with B as push-to-talk. Merge its connect/disconnect and activation-key callbacks into the existing `gungame.pwn` callbacks; do not duplicate them.
 
-For team radio, phones, faction channels, death-state restrictions, and custom UI, use the stream and speaker APIs documented in the upstream README and `include/voice-bridge.inc`.
+The upstream API and Pawn natives are documented at:
+- [Voice Bridge API and configuration](https://github.com/devbluen/omp-Voice-Bridge/blob/main/README.md)
+- [SampVoice-compatible example](https://github.com/devbluen/omp-Voice-Bridge/blob/main/examples/en/06-sampvoice-compatible.pwn)
 
-## Upstream source and documentation
+## Important: server restriction status
 
-- [Voice Bridge source](https://github.com/devbluen/omp-Voice-Bridge)
-- [Upstream API and configuration](https://github.com/devbluen/omp-Voice-Bridge/blob/main/README.md)
-- [Upstream SampVoice compatibility example](https://github.com/devbluen/omp-Voice-Bridge/blob/main/examples/en/06-sampvoice-compatible.pwn)
+The endpoints above identify the official IRAutoX deployment target. **This branding/build change does not yet cryptographically prevent the client or protocol from being used on another compatible server.** A real exclusive-server lock requires a coordinated server/client authentication change (signed server identity, client verification and server-side rejection), not just renaming the ASI or hardcoding an IP. Do not treat the current package as access-locked until that protocol work is implemented and tested.
