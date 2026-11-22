@@ -17,6 +17,7 @@ function Replace-Exact([string]$relativePath, [string]$old, [string]$new, [int]$
 Replace-Exact 'client/src/overlay.cpp' 'Voice Bridge' 'iRxVoice' 5
 Replace-Exact 'client/src/overlay.cpp' 'VOICE-BRIDGE' 'IRXVOICE' 1
 Replace-Exact 'client/src/overlay.cpp' '? "voice-bridge" : status.server' '? "iRxVoice" : status.server' 1
+Replace-Exact 'client/src/overlay.cpp' 'infoRow("Claude (Anthropic)", tr("development assistance", "auxílio no desenvolvimento"));' '' 1
 Replace-Exact 'server/src/log.cpp' '[VoiceBridge]' '[iRxVoice]' 4
 Replace-Exact 'server/src/version.hpp.in' '#define VOICE_BRIDGE_AUTHOR "devbluen"' '#define VOICE_BRIDGE_AUTHOR "DeathAmir"' 1
 Replace-Exact 'server/src/version.hpp.in' 'https://github.com/devbluen/omp-Voice-Bridge' 'https://github.com/DeathAmir/IRXVOICE' 1
