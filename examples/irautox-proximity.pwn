@@ -9,26 +9,26 @@ public OnPlayerConnect(playerid)
 
     if(SvGetVersion(playerid) == SV_NULL)
     {
-        SendClientMessage(playerid, 0xE74C3CFF, "[IRXVOICE] Voice client not detected.");
+        SendClientMessage(playerid, 0xE74C3CFF, "[iRxVoice] Voice client not detected.");
         return 1;
     }
 
     if(!SvHasMicro(playerid))
     {
-        SendClientMessage(playerid, 0xE67E22FF, "[IRXVOICE] Microphone not detected or disabled.");
+        SendClientMessage(playerid, 0xE67E22FF, "[iRxVoice] Microphone not detected or disabled.");
         return 1;
     }
 
-    gIRXLocalVoice[playerid] = SvCreateDLStreamAtPlayer(35.0, SV_INFINITY, playerid, 0xA970FFFF, "IRAutoX Local");
+    gIRXLocalVoice[playerid] = SvCreateDLStreamAtPlayer(35.0, SV_INFINITY, playerid, 0xA970FFFF, "DeathAmir iRxVoice - Local");
 
     if(gIRXLocalVoice[playerid] != SV_NULL)
     {
         SvAddKey(playerid, 0x42);
-        SendClientMessage(playerid, 0xA970FFFF, "[IRXVOICE] Press B to talk to nearby players.");
+        SendClientMessage(playerid, 0xA970FFFF, "[iRxVoice] Press B to talk to nearby players.");
     }
     else
     {
-        SendClientMessage(playerid, 0xE74C3CFF, "[IRXVOICE] Could not create your local voice stream.");
+        SendClientMessage(playerid, 0xE74C3CFF, "[iRxVoice] Could not create your local voice stream.");
     }
     return 1;
 }
