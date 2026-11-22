@@ -1,4 +1,4 @@
-name: IRXVOICE Build
+name: iRxVoice Build
 
 on:
   push:
@@ -11,15 +11,15 @@ permissions:
 
 jobs:
   windows:
-    name: Windows server + GTA SA client
+    name: iRxVoice Windows server + GTA SA client
     runs-on: windows-2022
     steps:
-      - name: Checkout IRXVOICE and upstream source
+      - name: Checkout iRxVoice and pinned engine
         uses: actions/checkout@v4
         with:
           submodules: recursive
 
-      - name: Show pinned upstream revision
+      - name: Show pinned engine revision
         shell: pwsh
         run: git -C upstream/voice-bridge rev-parse HEAD
 
@@ -28,14 +28,33 @@ jobs:
         run: |
           $ErrorActionPreference = 'Stop'
           & .\upstream\voice-bridge\build.ps1 -Target all -Package
-          if ($LASTEXITCODE -ne 0) { throw "Voice Bridge build failed: $LASTEXITCODE" }
+          if ($LASTEXITCODE -ne 0) { throw "iRxVoice engine build failed: $LASTEXITCODE" }
 
-      - name: Upload server and client packages
+      - name: Brand client binary and prepare distribution
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $client = Get-ChildItem -Path .\upstream\voice-bridge\dist\client -Filter 'voice-bridge.asi' -Recurse -File | Select-Object -First 1
+          if (-not $client) { throw 'Build did not produce voice-bridge.asi' }
+          Rename-Item -LiteralPath $client.FullName -NewName 'iRxVoice.asi'
+          New-Item -ItemType Directory -Force -Path .\dist\iRxVoice\client | Out-Null
+          New-Item -ItemType Directory -Force -Path .\dist\iRxVoice\server | Out-Null
+          Copy-Item .\upstream\voice-bridge\dist\client\* .\dist\iRxVoice\client\ -Recurse -Force
+          Copy-Item .\upstream\voice-bridge\dist\server\* .\dist\iRxVoice\server\ -Recurse -Force
+          Copy-Item .\LICENSE .\dist\iRxVoice\LICENSE -Force
+          @"
+          DeathAmir iRxVoice
+          Repository: https://github.com/DeathAmir/IRXVOICE
+          Official server: play.irautox.ir:7777
+          Official IPv4: 5.57.37.122:7777
+          Website: https://irautox.ir
+          Client: iRxVoice.asi
+          "@ | Set-Content .\dist\iRxVoice\README.txt -Encoding UTF8
+
+      - name: Upload branded distribution
         uses: actions/upload-artifact@v4
         with:
-          name: IRXVOICE-Windows
-          path: |
-            upstream/voice-bridge/dist/server/**
-            upstream/voice-bridge/dist/client/**
+          name: iRxVoice-Windows
+          path: dist/iRxVoice/**
           if-no-files-found: error
           retention-days: 30
