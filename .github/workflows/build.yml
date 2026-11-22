@@ -1,0 +1,41 @@
+name: IRXVOICE Build
+
+on:
+  push:
+    branches: [ main, "feature/**" ]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  windows:
+    name: Windows server + GTA SA client
+    runs-on: windows-latest
+    steps:
+      - name: Checkout IRXVOICE and upstream source
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Show pinned upstream revision
+        shell: pwsh
+        run: git -C upstream/voice-bridge rev-parse HEAD
+
+      - name: Build server and client, run server tests
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          & .\upstream\voice-bridge\build.ps1 -Target all -Package
+          if ($LASTEXITCODE -ne 0) { throw "Voice Bridge build failed: $LASTEXITCODE" }
+
+      - name: Upload server and client packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: IRXVOICE-Windows
+          path: |
+            upstream/voice-bridge/dist/server/**
+            upstream/voice-bridge/dist/client/**
+          if-no-files-found: error
+          retention-days: 30
